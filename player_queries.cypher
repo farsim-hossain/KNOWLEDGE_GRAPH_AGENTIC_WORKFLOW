@@ -1,17 +1,23 @@
-// Get all states for a specific player
-MATCH (p:Player {player_name: 'player_name'})-[:HAS_STATE]->(s:PlayerState)
+// get the players whos scoring_class is bad and end season is 2000
+
+
+MATCH (p:Player)-[:HAS_STATE]->(s:PlayerState)
+WHERE s.scoring_class = 'bad' 
+AND s.end_season = 2000
 RETURN p, s
-ORDER BY s.start_season;
 
-// Find all 'star' players in current season
-MATCH (p:Player)-[:HAS_STATE]->(s:PlayerState)
-WHERE s.scoring_class = 'star' 
-AND s.end_season = 9999
-RETURN p, s;
+// seeing all the nodes of each player
 
-// Track scoring progression
-MATCH (p:Player)-[:HAS_STATE]->(s:PlayerState)
-RETURN p.player_name, 
-       collect(s.scoring_class) as progression,
-       collect(s.start_season) as seasons
-ORDER BY p.player_name;
+MATCH (p:Player)-[r:HAS_STATE]->(s:PlayerState)
+WITH p, s
+CREATE (sc:ScoringClass {value: s.scoring_class})
+CREATE (ss:Season {value: 'Start: ' + toString(s.start_season)})
+CREATE (es:Season {value: 'End: ' + toString(s.end_season)})
+CREATE (cs:Season {value: 'Current: ' + toString(s.current_season)})
+CREATE (act:Status {value: CASE s.is_active WHEN true THEN 'Active' ELSE 'Inactive' END})
+CREATE (p)-[:HAS_PERFORMANCE]->(sc)
+CREATE (p)-[:STARTED_IN]->(ss)
+CREATE (p)-[:ENDED_IN]->(es)
+CREATE (p)-[:CURRENT_IN]->(cs)
+CREATE (p)-[:STATUS]->(act)
+RETURN *
